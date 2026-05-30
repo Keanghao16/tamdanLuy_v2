@@ -1,11 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="mb-6 flex justify-between items-center px-2">
-    <h1 class="text-2xl font-bold text-gray-900">Budgets</h1>
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <h1 class="text-3xl font-bold text-gray-900">Budgets</h1>
+    <a href="{{ route('budgets.create') }}" class="w-full sm:w-auto text-center bg-primary hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm shadow-emerald-200 transition flex items-center justify-center gap-2">
+        <i class="fas fa-plus"></i> New Budget
+    </a>
 </div>
 
-<div class="space-y-4 max-w-lg mx-auto">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     @forelse($budgets as $budget)
         @php
             $percentage = $budget->amount > 0 ? min(100, ($budget->spent / $budget->amount) * 100) : 0;

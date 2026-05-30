@@ -17,6 +17,11 @@ class TransactionController
         $userId = Auth::id() ?? 1; // Fallback to 1 for quick dev testing
         $activeAccountId = session('active_account_id');
 
+        $activeAccount = null;
+        if ($activeAccountId) {
+            $activeAccount = Account::find($activeAccountId);
+        }
+
         // Check if there is an active account, otherwise get totals
         $accountQuery = Account::where('user_id', $userId);
         if ($activeAccountId) {
@@ -29,26 +34,67 @@ class TransactionController
             $transactionQuery->where('account_id', $activeAccountId);
         }
 
+        $dateMode = $request->query('mode', session('dashboard_date_mode', 'month'));
+        session(['dashboard_date_mode' => $dateMode]);
+        
+        if ($dateMode === 'custom') {
+            $startDate = $request->query('start_date', session('dashboard_start_date', now()->startOfMonth()->format('Y-m-d')));
+            $endDate = $request->query('end_date', session('dashboard_end_date', now()->endOfMonth()->format('Y-m-d')));
+            
+            session([
+                'dashboard_start_date' => $startDate,
+                'dashboard_end_date' => $endDate
+            ]);
+
+            $transactionQuery->whereDate('transaction_date', '>=', $startDate)
+                             ->whereDate('transaction_date', '<=', $endDate);
+                             
+            $currentMonth = session('dashboard_month', now()->format('Y-m'));
+        } else {
+            $monthParam = $request->query('month', session('dashboard_month', now()->format('Y-m')));
+            session(['dashboard_month' => $monthParam]);
+            
+            $date = \Carbon\Carbon::createFromFormat('Y-m', $monthParam);
+            $startDate = $date->copy()->startOfMonth()->format('Y-m-d');
+            $endDate = $date->copy()->endOfMonth()->format('Y-m-d');
+            $currentMonth = $monthParam;
+            
+            $transactionQuery->whereYear('transaction_date', $date->year)
+                             ->whereMonth('transaction_date', $date->month);
+        }
+
         $thisMonthIncome = (clone $transactionQuery)
             ->whereHas('category', function($q) {
                 $q->where('type', 'income');
             })
-            ->whereMonth('transaction_date', now()->month)
             ->sum('amount');
             
         $thisMonthExpense = (clone $transactionQuery)
             ->whereHas('category', function($q) {
                 $q->where('type', 'expense');
             })
-            ->whereMonth('transaction_date', now()->month)
             ->sum('amount');
             
-        $latestTransactions = (clone $transactionQuery)->with(['account', 'category'])
+        $transactions = (clone $transactionQuery)->with(['account', 'category'])
             ->latest('transaction_date')
-            ->take(5)
             ->get();
+            
+        // Group transactions by Date
+        $groupedTransactions = $transactions->groupBy(function($tx) {
+            return $tx->transaction_date->format('Y-m-d');
+        });
 
-        return view('dashboard', compact('totalBalance', 'thisMonthIncome', 'thisMonthExpense', 'latestTransactions'));
+        return view('dashboard', compact(
+            'totalBalance', 
+            'thisMonthIncome', 
+            'thisMonthExpense', 
+            'groupedTransactions',
+            'dateMode',
+            'currentMonth',
+            'startDate',
+            'endDate',
+            'activeAccount'
+        ));
     }
 
     /**

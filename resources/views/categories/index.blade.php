@@ -1,8 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="mb-6 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-gray-900">Categories</h1>
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <h1 class="text-3xl font-bold text-gray-900">Categories</h1>
+    <a href="{{ route('categories.create') }}" class="w-full sm:w-auto text-center bg-primary hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm shadow-emerald-200 transition flex items-center justify-center gap-2">
+        <i class="fas fa-plus"></i> New Category
+    </a>
 </div>
 
 <div class="space-y-8 pb-20"> <!-- pb-20 for space in case there is a bottom bar, but we don't have one -->
@@ -53,34 +56,5 @@
             <p class="text-gray-500 mb-4">Start organizing by creating a category.</p>
         </div>
     @endforelse
-
-    <!-- Static options at the bottom matching the image (New Category / Removed Categories) -->
-    <div class="pt-4">
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <a href="{{ route('categories.create') }}" class="flex items-center justify-between p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white bg-gray-600">
-                        <i class="fa-solid fa-plus text-lg"></i>
-                    </div>
-                    <span class="ml-4 text-[16px] text-gray-800 font-medium">New Category</span>
-                </div>
-                <div class="text-gray-400">
-                    <i class="fa-solid fa-chevron-right text-sm"></i>
-                </div>
-            </a>
-            
-            <div class="flex items-center justify-between p-4 hover:bg-gray-50 transition cursor-pointer">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white bg-gray-500">
-                        <i class="fa-solid fa-trash text-lg"></i>
-                    </div>
-                    <span class="ml-4 text-[16px] text-gray-800 font-medium">Removed Categories</span>
-                </div>
-                <div class="text-gray-400">
-                    <i class="fa-solid fa-chevron-right text-sm"></i>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection

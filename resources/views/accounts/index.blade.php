@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="mb-6 flex justify-between items-center">
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <h1 class="text-2xl font-bold text-gray-900">Accounts</h1>
     <a href="{{ route('accounts.create') }}" class="bg-primary hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition">
         <i class="fas fa-plus mr-2"></i>New Account
