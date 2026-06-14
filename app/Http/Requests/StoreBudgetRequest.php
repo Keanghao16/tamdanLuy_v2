@@ -24,7 +24,8 @@ class StoreBudgetRequest extends FormRequest
     {
         return [
             'account_id' => 'required|exists:accounts,id',
-            'category_id' => 'required|exists:categories,id',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'exists:categories,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'amount' => 'required|numeric|min:0',

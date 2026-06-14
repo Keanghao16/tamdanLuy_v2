@@ -5,6 +5,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Auth\LoginController;
 
 Route::get('/', function() {
@@ -27,4 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('transactions', TransactionController::class);
     Route::resource('budgets', BudgetController::class);
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/categories', [ReportController::class, 'categories'])->name('reports.categories');
+    Route::get('/reports/ledger', [ReportController::class, 'ledger'])->name('reports.ledger');
 });

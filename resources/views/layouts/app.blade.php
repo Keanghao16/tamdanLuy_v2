@@ -42,6 +42,7 @@
                         <a href="{{ route('categories.index') }}" class="border-b-2 {{ request()->routeIs('categories.*') ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 text-sm font-medium">Categories</a>
                         <a href="{{ route('budgets.index') }}" class="border-b-2 {{ request()->routeIs('budgets.*') ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 text-sm font-medium">Budgets</a>
                         <a href="{{ route('transactions.index') }}" class="border-b-2 {{ request()->routeIs('transactions.*') ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 text-sm font-medium">Transactions</a>
+                        <a href="{{ route('reports.index') }}" class="border-b-2 {{ request()->routeIs('reports.*') ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 text-sm font-medium">Reports</a>
                     </div>
                 </div>
                 
@@ -130,6 +131,7 @@
                 <a href="{{ route('categories.index') }}" class="block px-4 py-2 text-base font-medium {{ request()->routeIs('categories.*') ? 'text-primary bg-green-50 border-l-4 border-primary' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800' }}">Categories</a>
                 <a href="{{ route('budgets.index') }}" class="block px-4 py-2 text-base font-medium {{ request()->routeIs('budgets.*') ? 'text-primary bg-green-50 border-l-4 border-primary' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800' }}">Budgets</a>
                 <a href="{{ route('transactions.index') }}" class="block px-4 py-2 text-base font-medium {{ request()->routeIs('transactions.*') ? 'text-primary bg-green-50 border-l-4 border-primary' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800' }}">Transactions</a>
+                <a href="{{ route('reports.index') }}" class="block px-4 py-2 text-base font-medium {{ request()->routeIs('reports.*') ? 'text-primary bg-green-50 border-l-4 border-primary' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800' }}">Reports</a>
                 <a href="{{ route('transactions.create') }}" class="block px-4 py-2 text-base font-medium text-emerald-600 hover:bg-emerald-50"><i class="fas fa-plus mr-2"></i>New Transaction</a>
                 
                 @auth
@@ -147,7 +149,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto pt-8 pb-32 sm:py-8 px-4 sm:px-6 lg:px-8">
         <!-- Flash Messages -->
         @if(session('success'))
             <div class="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded shadow-sm">

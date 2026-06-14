@@ -9,6 +9,7 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="divide-y divide-gray-100">
     @forelse($budgets as $budget)
         @php
             $percentage = $budget->amount > 0 ? min(100, ($budget->spent / $budget->amount) * 100) : 0;
@@ -31,52 +32,58 @@
             }
         @endphp
         
-        <a href="{{ route('budgets.edit', $budget) }}" class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-5 cursor-pointer hover:shadow-md transition">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-sm" style="background-color: {{ $budget->category->color ?? '#3b82f6' }}">
-                        <i class="{{ $budget->category->icon ?? 'fas fa-tag' }} text-xl"></i>
+        <a href="{{ route('budgets.edit', $budget) }}" class="block p-4 sm:p-6 cursor-pointer hover:bg-gray-50 transition">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-0">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <div class="flex -space-x-3 relative shrink-0">
+                        @foreach($budget->categories->take(3) as $cat)
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shadow-sm border-2 border-white relative z-{{ 30 - ($loop->index * 10) }}" style="background-color: {{ $cat->color ?? '#3b82f6' }}">
+                                <i class="{{ $cat->icon ?? 'fas fa-tag' }} text-base sm:text-lg"></i>
+                            </div>
+                        @endforeach
+                        @if($budget->categories->count() > 3)
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 font-bold shadow-sm border-2 border-white relative z-0 text-xs sm:text-base">
+                                +{{ $budget->categories->count() - 3 }}
+                            </div>
+                        @endif
                     </div>
-                    <div>
-                        <h3 class="font-bold text-gray-900 text-lg">{{ $budget->category->name ?? 'Unknown' }}</h3>
-                        <p class="text-xs text-gray-400 font-medium mt-0.5">{{ $budget->account->name }} • {{ $timeLabel }}</p>
+                    <div class="pl-2 min-w-0">
+                        <h3 class="font-bold text-gray-900 text-base sm:text-lg truncate max-w-full" title="{{ $budget->categories->pluck('name')->implode(', ') }}">
+                            {{ \Illuminate\Support\Str::limit($budget->categories->pluck('name')->implode(', '), 25) }}
+                        </h3>
+                        <p class="text-xs text-gray-400 font-medium mt-0.5 truncate">{{ $budget->account->name }} • {{ $timeLabel }}</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <span class="text-gray-900 font-medium block text-[15px]">
+                <div class="text-left sm:text-right pl-[3.25rem] sm:pl-0 w-full sm:w-auto">
+                    <span class="text-gray-900 font-medium block text-sm sm:text-[15px]">
                         {{ $isKHR ? '' : $currencySymbol }}{{ $remainingFormatted }}{{ $isKHR ? $currencySymbol : '' }} left
                     </span>
                 </div>
             </div>
             
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-800">
+            <div class="flex justify-between items-center mb-2 pl-[3.25rem] sm:pl-0">
+                <span class="text-xs sm:text-sm font-medium text-gray-800">
                     {{ $isKHR ? '' : $currencySymbol }}{{ $spentFormatted }}{{ $isKHR ? $currencySymbol : '' }} <span class="text-gray-400 font-normal">/ {{ $isKHR ? '' : $currencySymbol }}{{ $amountFormatted }}{{ $isKHR ? $currencySymbol : '' }}</span>
+                </span>
+                <span class="text-xs font-bold {{ $colorClass === 'bg-red-500' ? 'text-red-500' : ($colorClass === 'bg-yellow-500' ? 'text-yellow-600' : 'text-green-500') }}">
+                    {{ round($percentage) }}%
                 </span>
             </div>
             
             <!-- Progress Bar -->
-            <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden mb-1 relative">
+            <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden mb-1 relative ml-[3.25rem] sm:ml-0" style="width: calc(100% - 3.25rem); sm:width: 100%;">
                 <div class="{{ $colorClass }} h-2 rounded-full transition-all duration-500 ease-in-out" style="width: {{ $percentage }}%"></div>
             </div>
         </a>
     @empty
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center">
+        <div class="p-10 text-center">
             <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
                 <i class="fas fa-chart-pie"></i>
             </div>
             <h3 class="text-lg font-medium text-gray-900 mb-1">No budgets set</h3>
-            <p class="text-gray-500 mb-6 text-sm">Start planning by creating a budget for a category.</p>
+            <p class="text-gray-500 text-sm">Start planning by creating a budget for a category.</p>
         </div>
     @endforelse
-
-    <a href="{{ route('budgets.create') }}" class="block w-full text-center bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:bg-gray-50 transition cursor-pointer mt-4">
-        <div class="flex items-center justify-start ml-2 space-x-4 text-gray-800 font-medium">
-            <div class="w-10 h-10 rounded-full bg-gray-600 text-white flex items-center justify-center">
-                <i class="fas fa-plus"></i>
-            </div>
-            <span>Add budget category</span>
-        </div>
-    </a>
+    </div>
 </div>
 @endsection

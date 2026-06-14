@@ -44,17 +44,22 @@
             </div>
 
             <div>
-                <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select name="category_id" id="category_id" required
-                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
-                    <option value="">Select Category</option>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Categories (Select one or more scope)</label>
+                <div class="w-full rounded-lg border border-gray-300 shadow-sm max-h-48 overflow-y-auto bg-white p-2">
                     @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
+                        <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer transition">
+                            <input type="checkbox" name="category_ids[]" value="{{ $category->id }}" class="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300"
+                                {{ in_array($category->id, old('category_ids', [])) ? 'checked' : '' }}>
+                            <span class="ml-3 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs" style="background-color: {{ $category->color ?? '#9ca3af' }}">
+                                    <i class="{{ $category->icon ?? 'fas fa-tag' }}"></i>
+                                </span>
+                                <span class="text-sm text-gray-700">{{ $category->name }}</span>
+                            </span>
+                        </label>
                     @endforeach
-                </select>
-                @error('category_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                @error('category_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>

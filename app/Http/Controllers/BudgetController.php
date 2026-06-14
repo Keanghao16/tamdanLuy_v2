@@ -18,7 +18,7 @@ class BudgetController
         $userId = Auth::id() ?? 1;
         $activeAccountId = session('active_account_id');
 
-        $query = Budget::with(['category', 'account'])->where('user_id', $userId);
+        $query = Budget::with(['categories', 'account'])->where('user_id', $userId);
         
         if ($activeAccountId) {
             $query->where('account_id', $activeAccountId);
@@ -28,9 +28,11 @@ class BudgetController
 
         // Calculate spent amount for each budget using transactions
         foreach ($budgets as $budget) {
+            $categoryIds = $budget->categories->pluck('id')->toArray();
+            
             $budget->spent = \App\Models\Transaction::where('user_id', $userId)
                 ->where('account_id', $budget->account_id)
-                ->where('category_id', $budget->category_id)
+                ->whereIn('category_id', $categoryIds)
                 ->whereBetween('transaction_date', [$budget->start_date, $budget->end_date])
                 ->sum('amount');
         }
@@ -59,9 +61,12 @@ class BudgetController
     {
         $userId = Auth::id() ?? 1;
         $validated = $request->validated();
-        $validated['user_id'] = $userId;
+        
+        $budgetData = collect($validated)->except('category_ids')->toArray();
+        $budgetData['user_id'] = $userId;
 
-        Budget::create($validated);
+        $budget = Budget::create($budgetData);
+        $budget->categories()->attach($validated['category_ids']);
 
         return redirect()->route('budgets.index')->with('success', 'Budget created successfully.');
     }
@@ -100,7 +105,11 @@ class BudgetController
         abort_if($budget->user_id !== $userId, 403);
 
         $validated = $request->validated();
-        $budget->update($validated);
+        
+        $budgetData = collect($validated)->except('category_ids')->toArray();
+        $budget->update($budgetData);
+        
+        $budget->categories()->sync($validated['category_ids']);
 
         return redirect()->route('budgets.index')->with('success', 'Budget updated successfully.');
     }
