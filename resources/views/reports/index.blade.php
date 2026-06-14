@@ -14,6 +14,7 @@
 
     $incomePieGradient = $income > 0 ? 'conic-gradient(#10b981 0deg 360deg)' : 'conic-gradient(#e5e7eb 0deg 360deg)';
     $expensePieGradient = $expense > 0 ? 'conic-gradient(#ef4444 0deg 360deg)' : 'conic-gradient(#e5e7eb 0deg 360deg)';
+    $savingPieGradient = $savings > 0 ? 'conic-gradient(#3b82f6 0deg 360deg)' : 'conic-gradient(#e5e7eb 0deg 360deg)';
     $reportQueryWithoutType = array_diff_key(request()->query(), ['type' => true]);
 @endphp
 
@@ -21,7 +22,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Reports</h1>
-            <p class="text-sm text-gray-500 mt-1">Layer 1 compares income and expense volume for {{ $periodLabel }}.</p>
+            <p class="text-sm text-gray-500 mt-1">Layer 1 compares income, expense, and savings for {{ $periodLabel }}.</p>
         </div>
 
         <div class="relative w-full sm:w-auto" x-data="{ open: false, mode: '{{ $mode }}' }">
@@ -104,18 +105,18 @@
     <section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
             <p class="text-xs font-bold text-primary uppercase tracking-wider">Layer 1</p>
-            <h2 class="text-lg font-bold text-gray-900">Income and Expense Pie Charts</h2>
-            <p class="text-sm text-gray-500 mt-1">Each pie opens its category breakdown.</p>
+            <h2 class="text-lg font-bold text-gray-900">Income, Expense, and Savings Overview</h2>
+            <p class="text-sm text-gray-500 mt-1">Each pie shows the total amount for its type.</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 sm:p-6">
             <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'income'])) }}" class="group rounded-2xl border border-gray-100 bg-gray-50 p-5 hover:border-emerald-200 hover:bg-emerald-50 transition">
                 <div class="relative w-44 h-44 mx-auto rounded-full mb-5" style="background: {{ $incomePieGradient }};">
                     <div class="absolute inset-12 rounded-full bg-white shadow-sm"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <div class="text-center">
                             <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Income</p>
-                            <p class="text-xl font-bold text-green-600 mt-1">{{ $formatAmount($income) }}</p>
+                            <p class="text-xl font-bold text-gray-900 mt-1">{{ $formatAmount($income) }}</p>
                         </div>
                     </div>
                 </div>
@@ -134,7 +135,7 @@
                     <div class="absolute inset-0 flex items-center justify-center">
                         <div class="text-center">
                             <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Expenses</p>
-                            <p class="text-xl font-bold text-red-500 mt-1">{{ $formatAmount($expense) }}</p>
+                            <p class="text-xl font-bold text-gray-900 mt-1">{{ $formatAmount($expense) }}</p>
                         </div>
                     </div>
                 </div>
@@ -146,12 +147,31 @@
                     <i class="fas fa-chevron-right text-gray-400 group-hover:text-red-600"></i>
                 </div>
             </a>
+
+            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'saving'])) }}" class="group rounded-2xl border border-gray-100 bg-gray-50 p-5 hover:border-blue-200 hover:bg-blue-50 transition">
+                <div class="relative w-44 h-44 mx-auto rounded-full mb-5" style="background: {{ $savingPieGradient }};">
+                    <div class="absolute inset-12 rounded-full bg-white shadow-sm"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Savings</p>
+                            <p class="text-xl font-bold text-gray-900 mt-1">{{ $formatAmount($savings) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-bold text-gray-900">Saving Categories</h3>
+                        <p class="text-xs text-gray-500 mt-1">Open saving breakdown</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 group-hover:text-blue-600"></i>
+                </div>
+            </a>
         </div>
 
         <div class="grid grid-cols-3 gap-2 px-4 pb-5 sm:px-6">
             <div class="rounded-2xl bg-white border border-gray-100 p-3 text-center">
-                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Net</p>
-                <p class="text-base sm:text-lg font-bold {{ $net >= 0 ? 'text-gray-900' : 'text-red-500' }} mt-1">{{ $net >= 0 ? '+' : '-' }}{{ $formatAmount(abs($net)) }}</p>
+                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Net (Cash Remainder)</p>
+                <p class="text-base sm:text-lg font-bold {{ $net >= 0 ? 'text-green-600' : 'text-red-500' }} mt-1">{{ $net >= 0 ? '+' : '-' }}{{ $formatAmount(abs($net)) }}</p>
             </div>
             <div class="rounded-2xl bg-white border border-gray-100 p-3 text-center">
                 <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Transactions</p>

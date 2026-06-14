@@ -20,18 +20,24 @@ class ReportController
         $transactions = $this->fetchTransactions($context['userId'], $context['activeAccountId'], $startDate, $endDate);
         $monthlyTotals = $this->monthlyTotals($transactions, $context['startDate'], $context['endDate']);
 
+        // 1. Initialize all three financial pools explicitly
         $income = 0;
         $expense = 0;
+        $savings = 0;
 
         foreach ($transactions as $transaction) {
-            if ($this->transactionType($transaction) === 'income') {
+            $type = $this->transactionType($transaction);
+            if ($type === 'income') {
                 $income += $transaction->amount;
+            } elseif ($type === 'saving') {
+                $savings += $transaction->amount;
             } else {
                 $expense += $transaction->amount;
             }
         }
 
-        $net = $income - $expense;
+        // Updated Net Formula: Pure remainder cash flow
+        $net = $income - $expense - $savings;
         $reportCurrency = $context['activeAccount']?->currency ?? $transactions->first()?->account?->currency ?? 'USD';
 
         return view('reports.index', compact(
@@ -39,6 +45,7 @@ class ReportController
             'income',
             'expense',
             'net',
+            'savings',
             'monthlyTotals',
             'startDate',
             'endDate',
@@ -57,7 +64,7 @@ class ReportController
         $currentMonth = $context['currentMonth'];
         $mode = $context['mode'];
         $activeAccount = $context['activeAccount'];
-        $type = $this->reportType($request);
+        $type = $this->reportType($request); // Now parses income, expense, or saving
         $transactions = $this->fetchTransactions($context['userId'], $context['activeAccountId'], $startDate, $endDate);
         $categories = $this->categoryTotals($transactions, $type);
         $total = $categories->sum('total');
@@ -122,12 +129,21 @@ class ReportController
         $userId = Auth::id() ?? 1;
         $activeAccountId = session('active_account_id');
         $activeAccount = $activeAccountId ? Account::find($activeAccountId) : null;
-        $mode = $request->query('mode', 'month');
+        $mode = $request->query('mode', session('report_date_mode', 'month'));
+        session(['report_date_mode' => $mode]);
         $currentMonth = now()->format('Y-m');
 
         if ($mode === 'custom') {
-            $startDate = $request->query('start_date', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->query('end_date', now()->format('Y-m-d'));
+            $startDate = $request->query('start_date', session('report_start_date', now()->startOfMonth()->format('Y-m-d')));
+            $endDate = $request->query('end_date', session('report_end_date', now()->format('Y-m-d')));
+
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
+                $startDate = session('report_start_date', now()->startOfMonth()->format('Y-m-d'));
+            }
+
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate)) {
+                $endDate = session('report_end_date', now()->format('Y-m-d'));
+            }
 
             if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
                 $startDate = now()->startOfMonth()->format('Y-m-d');
@@ -141,9 +157,18 @@ class ReportController
                 [$startDate, $endDate] = [$endDate, $startDate];
             }
 
+            session([
+                'report_start_date' => $startDate,
+                'report_end_date' => $endDate,
+            ]);
+
             $currentMonth = \Carbon\Carbon::parse($endDate)->format('Y-m');
         } else {
-            $monthParam = $request->query('month', now()->format('Y-m'));
+            $monthParam = $request->query('month', session('report_month', now()->format('Y-m')));
+
+            if (!preg_match('/^\d{4}-\d{2}$/', $monthParam)) {
+                $monthParam = session('report_month', now()->format('Y-m'));
+            }
 
             if (!preg_match('/^\d{4}-\d{2}$/', $monthParam)) {
                 $monthParam = now()->format('Y-m');
@@ -153,6 +178,8 @@ class ReportController
             $startDate = $date->copy()->startOfMonth()->format('Y-m-d');
             $endDate = $date->copy()->endOfMonth()->format('Y-m-d');
             $currentMonth = $monthParam;
+
+            session(['report_month' => $monthParam]);
         }
 
         return compact('userId', 'activeAccountId', 'activeAccount', 'mode', 'startDate', 'endDate', 'currentMonth');
@@ -162,7 +189,7 @@ class ReportController
     {
         $query = Transaction::with(['category', 'account'])
             ->where('user_id', $userId)
-            ->whereBetween('transaction_date', [$startDate, $endDate]);
+            ->whereBetween('transaction_date', [$startDate, \Carbon\Carbon::parse($endDate)->endOfDay()->format('Y-m-d H:i:s')]);
 
         if ($activeAccountId) {
             $query->where('account_id', $activeAccountId);
@@ -171,18 +198,21 @@ class ReportController
         return $query->get();
     }
 
+    // 2. Updated to validate and match against three separate types
     private function transactionType($transaction): string
     {
-        return ($transaction->category?->type ?? 'expense') === 'income' ? 'income' : 'expense';
+        $type = $transaction->category?->type ?? 'expense';
+        return in_array($type, ['income', 'expense', 'saving'], true) ? $type : 'expense';
     }
 
+    // 3. Updated to allow 'saving' as an accepted report view filter parameter
     private function reportType(Request $request): string
     {
         $type = $request->query('type', 'expense');
-
-        return in_array($type, ['income', 'expense'], true) ? $type : 'expense';
+        return in_array($type, ['income', 'expense', 'saving'], true) ? $type : 'expense';
     }
 
+    // 4. Added support for savings inside historical multi-month datasets
     private function monthlyTotals($transactions, string $startDate, string $endDate): array
     {
         $monthlyTotals = [];
@@ -200,6 +230,7 @@ class ReportController
             $monthlyTotals[$key] = [
                 'income' => 0,
                 'expense' => 0,
+                'saving' => 0,
             ];
             $cursor->addMonth();
         }
@@ -222,10 +253,6 @@ class ReportController
         $dailyEnd = \Carbon\Carbon::parse($endDate)->endOfDay();
         $dailyStart = \Carbon\Carbon::parse($startDate)->startOfDay();
 
-        if ($dailyStart->diffInDays($dailyEnd) > 29) {
-            $dailyStart = $dailyEnd->copy()->subDays(29)->startOfDay();
-        }
-
         $dailyCursor = $dailyStart->copy();
         while ($dailyCursor->lte($dailyEnd)) {
             $dayKey = $dailyCursor->format('Y-m-d');
@@ -239,29 +266,47 @@ class ReportController
         foreach ($transactions as $transaction) {
             $dayKey = $transaction->transaction_date->format('Y-m-d');
 
-            if (isset($dailyTotals[$dayKey])) {
-                $dailyTotals[$dayKey]['amount'] += $transaction->amount;
-                $dailyTotals[$dayKey]['count'] += 1;
+            if (!isset($dailyTotals[$dayKey])) {
+                continue;
             }
+
+            $dailyTotals[$dayKey]['amount'] += abs((float) $transaction->amount);
+            $dailyTotals[$dayKey]['count'] += 1;
         }
 
-        return $dailyTotals;
+        return collect($dailyTotals)
+            ->sortKeys()
+            ->toArray();
     }
 
+    // 5. Configured dynamic visual context mappings for savings
     private function categoryTotals($transactions, string $type)
     {
-        $fallbackColor = $type === 'income' ? '#10b981' : '#ef4444';
+        $fallbackColors = [
+            'income' => '#10b981',
+            'saving' => '#3b82f6',
+            'expense' => '#ef4444'
+        ];
+
+        $fallbackIcons = [
+            'income' => 'fas fa-arrow-down',
+            'saving' => 'fas fa-piggy-bank',
+            'expense' => 'fas fa-arrow-up'
+        ];
+
+        $fallbackColor = $fallbackColors[$type] ?? '#ef4444';
+        $fallbackIcon = $fallbackIcons[$type] ?? 'fas fa-arrow-up';
 
         return $transactions
             ->filter(fn ($transaction) => $this->transactionType($transaction) === $type)
             ->groupBy(fn ($transaction) => $transaction->category?->id ?? 'uncategorized')
-            ->map(function ($items) use ($type, $fallbackColor) {
+            ->map(function ($items) use ($type, $fallbackColor, $fallbackIcon) {
                 $first = $items->first();
 
                 return [
                     'key' => (string) ($first->category?->id ?? 'uncategorized'),
                     'name' => $first->category?->name ?? 'Uncategorized',
-                    'icon' => $first->category?->icon ?? ($type === 'income' ? 'fas fa-arrow-down' : 'fas fa-arrow-up'),
+                    'icon' => $first->category?->icon ?? $fallbackIcon,
                     'color' => $first->category?->color ?? $fallbackColor,
                     'total' => $items->sum('amount'),
                     'count' => $items->count(),

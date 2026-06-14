@@ -13,8 +13,21 @@
         : \Carbon\Carbon::createFromFormat('Y-m', $currentMonth)->format('F Y');
 
     $typeLabel = ucfirst($type);
-    $typeColor = $type === 'income' ? 'text-green-600' : 'text-red-500';
-    $typeBg = $type === 'income' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-500 border-red-100';
+    
+    // Dynamic color rules mapping all three context modes
+    $colorMaps = [
+        'income' => ['text' => 'text-green-600', 'bg' => 'bg-green-50 text-green-600 border-green-100', 'icon' => 'fas fa-arrow-down', 'hover' => 'hover:border-green-200 hover:bg-green-50'],
+        'saving' => ['text' => 'text-blue-600', 'bg' => 'bg-blue-50 text-blue-600 border-blue-100', 'icon' => 'fas fa-piggy-bank', 'hover' => 'hover:border-blue-200 hover:bg-blue-50'],
+        'expense' => ['text' => 'text-red-500', 'bg' => 'bg-red-50 text-red-500 border-red-100', 'icon' => 'fas fa-arrow-up', 'hover' => 'hover:border-red-200 hover:bg-red-50']
+    ];
+
+    $currentMap = $colorMaps[$type] ?? $colorMaps['expense'];
+
+    $typeColor = $currentMap['text'];
+    $typeBg = $currentMap['bg'];
+    $typeIcon = $currentMap['icon'];
+    $hoverClass = $currentMap['hover'];
+
     $pieGradient = 'conic-gradient(#e5e7eb 0deg 360deg)';
     $pieStart = 0;
     $pieSegments = [];
@@ -47,8 +60,9 @@
         </div>
 
         <div class="flex gap-2 w-full sm:w-auto">
-            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'income'])) }}" class="flex-1 sm:flex-none text-center px-4 py-2 rounded-xl text-sm font-bold border {{ $type === 'income' ? 'bg-green-600 border-green-600 text-white' : 'bg-white border-gray-200 text-gray-600' }}">Income</a>
-            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'expense'])) }}" class="flex-1 sm:flex-none text-center px-4 py-2 rounded-xl text-sm font-bold border {{ $type === 'expense' ? 'bg-red-500 border-red-500 text-white' : 'bg-white border-gray-200 text-gray-600' }}">Expenses</a>
+            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'income'])) }}" class="flex-1 sm:flex-none text-center px-3 py-2 rounded-xl text-sm font-bold border {{ $type === 'income' ? 'bg-green-600 border-green-600 text-white' : 'bg-white border-gray-200 text-gray-600' }}">Income</a>
+            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'saving'])) }}" class="flex-1 sm:flex-none text-center px-3 py-2 rounded-xl text-sm font-bold border {{ $type === 'saving' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600' }}">Savings</a>
+            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'expense'])) }}" class="flex-1 sm:flex-none text-center px-3 py-2 rounded-xl text-sm font-bold border {{ $type === 'expense' ? 'bg-red-500 border-red-500 text-white' : 'bg-white border-gray-200 text-gray-600' }}">Expenses</a>
         </div>
     </div>
 
@@ -63,13 +77,13 @@
         </div>
 
         <div class="p-4 sm:p-6">
-            <div class="rounded-2xl {{ $type === 'income' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100' }} border p-4 mb-5 flex items-center justify-between gap-3">
+            <div class="rounded-2xl {{ $typeBg }} border p-4 mb-5 flex items-center justify-between gap-3">
                 <div>
                     <p class="text-xs font-bold {{ $typeColor }} uppercase tracking-wider">Total {{ $typeLabel }}</p>
                     <p class="text-2xl font-bold text-gray-900 mt-1">{{ $formatAmount($total) }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center {{ $typeColor }}">
-                    <i class="{{ $type === 'income' ? 'fas fa-arrow-down' : 'fas fa-arrow-up' }} text-xl"></i>
+                    <i class="{{ $typeIcon }} text-xl"></i>
                 </div>
             </div>
 
@@ -95,7 +109,7 @@
                             'category' => $category['key'],
                         ]);
                     @endphp
-                    <a href="{{ route('reports.ledger', $ledgerQuery) }}" class="block rounded-2xl border border-gray-100 bg-white p-4 hover:border-emerald-200 hover:bg-emerald-50 transition">
+                    <a href="{{ route('reports.ledger', $ledgerQuery) }}" class="block rounded-2xl border border-gray-100 bg-white p-4 {{ $hoverClass }} transition">
                         <div class="flex items-center justify-between gap-3">
                             <div class="flex items-center gap-3 min-w-0">
                                 <div class="w-11 h-11 rounded-full flex items-center justify-center text-white shrink-0" style="background-color: {{ $category['color'] }}">
@@ -117,8 +131,8 @@
                     </a>
                 @empty
                     <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
-                        <div class="w-14 h-14 {{ $type === 'income' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500' }} rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="{{ $type === 'income' ? 'fas fa-arrow-down' : 'fas fa-tags' }} text-xl"></i>
+                        <div class="w-14 h-14 {{ $typeBg }} rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="{{ $typeIcon }} text-xl"></i>
                         </div>
                         <h3 class="font-bold text-gray-900">No {{ strtolower($typeLabel) }} categories</h3>
                         <p class="text-sm text-gray-500 mt-1">No {{ strtolower($typeLabel) }} transactions match this period.</p>

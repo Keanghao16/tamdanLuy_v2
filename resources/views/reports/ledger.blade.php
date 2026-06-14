@@ -13,10 +13,22 @@
         : \Carbon\Carbon::createFromFormat('Y-m', $currentMonth)->format('F Y');
 
     $categoryName = $category?->name ?? ($categoryId === 'uncategorized' ? 'Uncategorized' : 'Selected Category');
-    $categoryIcon = $category?->icon ?? ($type === 'income' ? 'fas fa-arrow-down' : 'fas fa-arrow-up');
-    $categoryColor = $category?->color ?? ($type === 'income' ? '#10b981' : '#ef4444');
-    $lineColor = $type === 'income' ? '#10b981' : '#ef4444';
-    $amountClass = $type === 'income' ? 'text-green-600' : 'text-red-600';
+
+    // UI Styles mapped cleanly across three options
+    $themeMaps = [
+        'income' => ['color' => '#10b981', 'bg' => 'bg-green-50 border-green-100', 'bar' => 'bg-green-500', 'text' => 'text-green-600', 'icon' => 'fas fa-arrow-down'],
+        'saving' => ['color' => '#3b82f6', 'bg' => 'bg-blue-50 border-blue-100', 'bar' => 'bg-blue-500', 'text' => 'text-blue-600', 'icon' => 'fas fa-piggy-bank'],
+        'expense' => ['color' => '#ef4444', 'bg' => 'bg-red-50 border-red-100', 'bar' => 'bg-red-500', 'text' => 'text-red-600', 'icon' => 'fas fa-arrow-up']
+    ];
+
+    $activeTheme = $themeMaps[$type] ?? $themeMaps['expense'];
+
+    $categoryIcon = $category?->icon ?? $activeTheme['icon'];
+    $categoryColor = $category?->color ?? $activeTheme['color'];
+    $lineColor = $activeTheme['color'];
+    $amountClass = $activeTheme['text'];
+    $bgContainerClass = $activeTheme['bg'];
+    $barFillClass = $activeTheme['bar'];
 
     $maxAmount = collect($dailyTotals)->max('amount') ?: 0;
     $reportQueryWithoutCategory = array_diff_key(request()->query(), ['category' => true]);
@@ -52,13 +64,13 @@
         </div>
 
         <div class="p-4 sm:p-6 space-y-6">
-            <div class="rounded-2xl {{ $type === 'income' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100' }} border p-4 flex items-center justify-between gap-3">
+            <div class="rounded-2xl {{ $bgContainerClass }} border p-4 flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs font-bold {{ $amountClass }} uppercase tracking-wider">Total {{ $type }}</p>
+                    <p class="text-xs font-bold {{ $amountClass }} uppercase tracking-wider">Total {{ ucfirst($type) }}</p>
                     <p class="text-2xl font-bold text-gray-900 mt-1">{{ $formatAmount($total) }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center {{ $amountClass }}">
-                    <i class="{{ $type === 'income' ? 'fas fa-chart-bar' : 'fas fa-chart-bar' }} text-xl"></i>
+                    <i class="fas fa-chart-bar text-xl"></i>
                 </div>
             </div>
 
@@ -77,21 +89,16 @@
                             @php
                                 $barHeight = $maxAmount > 0 ? max(8, ($day['amount'] / $maxAmount) * 100) : 0;
                             @endphp
-                            <div class="flex-[0_0_16px] flex flex-col items-center gap-1">
+                            <div class="flex-[0_0_24px] flex flex-col items-center gap-2">
                                 <div class="w-full h-32 bg-white rounded-t-xl border border-gray-100 flex items-end justify-center overflow-hidden">
-                                    <div class="w-full rounded-t-md {{ $type === 'income' ? 'bg-green-500' : 'bg-red-500' }} transition-all duration-300" style="height: {{ $day['amount'] > 0 ? $barHeight : 0 }}%;" title="{{ \Carbon\Carbon::parse($dayKey)->format('M d, Y') }} · {{ $formatAmount($day['amount']) }} · {{ $day['count'] }} txns"></div>
+                                    <div class="w-full rounded-t-md {{ $barFillClass }} transition-all duration-300" style="height: {{ $day['amount'] > 0 ? $barHeight : 0 }}%;" title="{{ \Carbon\Carbon::parse($dayKey)->format('M d, Y') }} · {{ $formatAmount($day['amount']) }} · {{ $day['count'] }} txns"></div>
                                 </div>
-                                <span class="text-[10px] text-gray-400 -rotate-45 origin-top">{{ \Carbon\Carbon::parse($dayKey)->format('M d') }}</span>
+                                <span class="text-[10px] text-gray-400 -rotate-45 origin-top translate-y-1 whitespace-nowrap">{{ \Carbon\Carbon::parse($dayKey)->format('M d') }}</span>
                             </div>
                         @empty
                             <div class="w-full text-center text-gray-500 py-10">No daily data available.</div>
                         @endforelse
                     </div>
-                </div>
-
-                <div class="flex justify-between text-[10px] text-gray-400 px-1">
-                    <span>{{ count($dailyTotals) ? \Carbon\Carbon::parse(array_key_first($dailyTotals))->format('M d') : '-' }}</span>
-                    <span>{{ count($dailyTotals) ? \Carbon\Carbon::parse(array_key_last($dailyTotals))->format('M d') : '-' }}</span>
                 </div>
             </div>
 
@@ -107,7 +114,9 @@
                 <div class="divide-y divide-gray-100 bg-white">
                     @forelse($transactions as $tx)
                         @php
-                            $signedAmount = $type === 'income' ? $tx->amount : -$tx->amount;
+                            // Income & explicit savings are treated positively on transaction line indicators
+                            $isPositive = in_array($type, ['income', 'saving']);
+                            $signedAmount = $isPositive ? $tx->amount : -$tx->amount;
                             $sign = $signedAmount < 0 ? '-' : '+';
                             $lineAmountClass = $signedAmount < 0 ? 'text-red-600' : 'text-green-600';
                         @endphp
@@ -126,7 +135,7 @@
                             </div>
                             <div class="text-right shrink-0">
                                 <p class="font-bold {{ $lineAmountClass }}">{{ $sign }}{{ $formatAmount(abs($signedAmount)) }}</p>
-                                <p class="text-[11px] font-semibold uppercase tracking-wider {{ $type === 'income' ? 'text-green-600' : 'text-red-500' }}">{{ $type }}</p>
+                                <p class="text-[11px] font-semibold uppercase tracking-wider {{ $amountClass }}">{{ $type }}</p>
                             </div>
                         </div>
                     @empty
