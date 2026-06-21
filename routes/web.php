@@ -27,6 +27,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('accounts', AccountController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('transactions', TransactionController::class);
+    Route::get('/transactions/create/select-category', [CategoryController::class, 'picker'])->name('categories.picker');
     Route::resource('budgets', BudgetController::class);
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/categories', [ReportController::class, 'categories'])->name('reports.categories');

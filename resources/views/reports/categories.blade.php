@@ -1,3 +1,5 @@
+<!-- Report categories view -->
+
 @extends('layouts.app')
 
 @section('content')
@@ -14,11 +16,10 @@
 
     $typeLabel = ucfirst($type);
     
-    // Dynamic color rules mapping all three context modes
     $colorMaps = [
-        'income' => ['text' => 'text-green-600', 'bg' => 'bg-green-50 text-green-600 border-green-100', 'icon' => 'fas fa-arrow-down', 'hover' => 'hover:border-green-200 hover:bg-green-50'],
-        'saving' => ['text' => 'text-blue-600', 'bg' => 'bg-blue-50 text-blue-600 border-blue-100', 'icon' => 'fas fa-piggy-bank', 'hover' => 'hover:border-blue-200 hover:bg-blue-50'],
-        'expense' => ['text' => 'text-red-500', 'bg' => 'bg-red-50 text-red-500 border-red-100', 'icon' => 'fas fa-arrow-up', 'hover' => 'hover:border-red-200 hover:bg-red-50']
+        'income' => ['text' => 'text-green-600', 'bg' => 'bg-green-50 text-green-600 border-green-100', 'icon' => 'fas fa-arrow-down', 'hover' => 'hover:border-green-200 hover:bg-green-50/50', 'pill' => 'bg-green-600'],
+        'saving' => ['text' => 'text-blue-600', 'bg' => 'bg-blue-50 text-blue-600 border-blue-100', 'icon' => 'fas fa-piggy-bank', 'hover' => 'hover:border-blue-200 hover:bg-blue-50/50', 'pill' => 'bg-blue-600'],
+        'expense' => ['text' => 'text-red-500', 'bg' => 'bg-red-50 text-red-500 border-red-100', 'icon' => 'fas fa-arrow-up', 'hover' => 'hover:border-red-200 hover:bg-red-50/50', 'pill' => 'bg-red-500']
     ];
 
     $currentMap = $colorMaps[$type] ?? $colorMaps['expense'];
@@ -27,6 +28,7 @@
     $typeBg = $currentMap['bg'];
     $typeIcon = $currentMap['icon'];
     $hoverClass = $currentMap['hover'];
+    $pillActive = $currentMap['pill'];
 
     $pieGradient = 'conic-gradient(#e5e7eb 0deg 360deg)';
     $pieStart = 0;
@@ -38,108 +40,102 @@
             $pieSegments[] = $category['color'] . ' ' . number_format($pieStart, 2) . 'deg ' . number_format($pieEnd, 2) . 'deg';
             $pieStart = $pieEnd;
         }
-
         $pieGradient = 'conic-gradient(' . implode(', ', $pieSegments) . ')';
     }
 
     $reportQueryWithoutType = array_diff_key(request()->query(), ['type' => true, 'category' => true]);
 @endphp
 
-<div class="max-w-4xl mx-auto space-y-6 pb-32">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div class="mb-6 flex flex-col gap-4">
+    <div class="flex items-center gap-2">
+        <a href="{{ route('reports.index', request()->query()) }}" class="text-sm font-semibold text-gray-500 hover:text-primary transition flex items-center">
+            <i class="fas fa-chevron-left mr-1.5 text-xs"></i> Summary Overview
+        </a>
+        <span class="text-gray-300 text-xs">/</span>
+        <span class="text-sm font-semibold text-gray-400">Category Analytics</span>
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
         <div>
-            <div class="flex items-center gap-2 mb-1">
-                <a href="{{ route('reports.index', request()->query()) }}" class="text-sm text-gray-500 hover:text-primary">
-                    <i class="fas fa-chevron-left mr-1"></i> Back
-                </a>
-                <span class="text-gray-300">/</span>
-                <span class="text-sm font-semibold text-gray-500">Layer 2</span>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-900">{{ $typeLabel }} Categories</h1>
-            <p class="text-sm text-gray-500 mt-1">Category breakdown for {{ $periodLabel }}.</p>
+            <h1 class="text-2xl font-bold text-gray-900">{{ $typeLabel }} Breakdown</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Category breakdown analytics for {{ $periodLabel }}.</p>
         </div>
 
-        <div class="flex gap-2 w-full sm:w-auto">
-            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'income'])) }}" class="flex-1 sm:flex-none text-center px-3 py-2 rounded-xl text-sm font-bold border {{ $type === 'income' ? 'bg-green-600 border-green-600 text-white' : 'bg-white border-gray-200 text-gray-600' }}">Income</a>
-            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'saving'])) }}" class="flex-1 sm:flex-none text-center px-3 py-2 rounded-xl text-sm font-bold border {{ $type === 'saving' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600' }}">Savings</a>
-            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'expense'])) }}" class="flex-1 sm:flex-none text-center px-3 py-2 rounded-xl text-sm font-bold border {{ $type === 'expense' ? 'bg-red-500 border-red-500 text-white' : 'bg-white border-gray-200 text-gray-600' }}">Expenses</a>
+        <div class="flex bg-white p-1 rounded-xl border border-gray-200 shadow-sm w-full sm:w-auto shrink-0">
+            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'income'])) }}" class="flex-1 sm:flex-none text-center px-4 py-2 rounded-lg text-xs font-bold transition-all {{ $type === 'income' ? 'bg-green-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">Income</a>
+            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'saving'])) }}" class="flex-1 sm:flex-none text-center px-4 py-2 rounded-lg text-xs font-bold transition-all {{ $type === 'saving' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">Savings</a>
+            <a href="{{ route('reports.categories', array_merge($reportQueryWithoutType, ['type' => 'expense'])) }}" class="flex-1 sm:flex-none text-center px-4 py-2 rounded-lg text-xs font-bold transition-all {{ $type === 'expense' ? $pillActive . ' text-white shadow-sm' : 'text-gray-600 hover:text-gray-900' }}">Expenses</a>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="space-y-4">
+        <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Aggregate {{ $typeLabel }}</p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ $formatAmount($total) }}</h3>
+            </div>
+            <div class="w-11 h-11 rounded-xl shadow-sm flex items-center justify-center {{ $typeBg }} border">
+                <i class="{{ $typeIcon }} text-base"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm flex flex-col items-center text-center">
+            <div class="relative w-40 h-40 rounded-full mb-4 transition-transform hover:rotate-12 duration-500" style="background: {{ $pieGradient }};">
+                <div class="absolute inset-12 rounded-full bg-white shadow-md"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-xs text-gray-400 font-bold uppercase tracking-wider">
+                    Metrics
+                </div>
+            </div>
+            <p class="text-xs font-medium text-gray-400 leading-relaxed">Structural distribution weights mapped according to total transaction pools.</p>
         </div>
     </div>
 
-    <section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center gap-3">
-            <div>
-                <p class="text-xs font-bold text-primary uppercase tracking-wider">Layer 2</p>
-                <h2 class="text-lg font-bold text-gray-900">Category List</h2>
-                <p class="text-sm text-gray-500 mt-1">Tap a category to open its selected line chart.</p>
-            </div>
-            <span class="text-xs font-semibold {{ $typeBg }} border rounded-full px-3 py-1">{{ count($categories) }} categories</span>
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800 text-sm">Monitored Classes</h3>
+            <span class="text-xs font-bold text-gray-400 bg-white border px-2.5 py-0.5 rounded-lg shadow-2xs">{{ count($categories) }} Categories</span>
         </div>
 
-        <div class="p-4 sm:p-6">
-            <div class="rounded-2xl {{ $typeBg }} border p-4 mb-5 flex items-center justify-between gap-3">
-                <div>
-                    <p class="text-xs font-bold {{ $typeColor }} uppercase tracking-wider">Total {{ $typeLabel }}</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $formatAmount($total) }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center {{ $typeColor }}">
-                    <i class="{{ $typeIcon }} text-xl"></i>
-                </div>
-            </div>
-
-            <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5 mb-5 flex flex-col items-center text-center">
-                <div class="relative w-48 h-48 rounded-full mb-4" style="background: {{ $pieGradient }};">
-                    <div class="absolute inset-14 rounded-full bg-white shadow-sm"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div>
-                            <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total {{ $typeLabel }}</p>
-                            <p class="text-lg font-bold text-gray-900 mt-1">{{ $formatAmount($total) }}</p>
+        <div class="divide-y divide-gray-100">
+            @forelse($categories as $category)
+                @php
+                    $percentage = $total > 0 ? ($category['total'] / $total) * 100 : 0;
+                    $ledgerQuery = array_merge(array_diff_key(request()->query(), ['type' => true, 'category' => true]), [
+                        'type' => $type,
+                        'category' => $category['key'],
+                    ]);
+                @endphp
+                <a href="{{ route('reports.ledger', $ledgerQuery) }}" class="flex items-center justify-between p-4 {{ $hoverClass }} transition group">
+                    <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm" style="background-color: {{ $category['color'] }}">
+                            <i class="{{ $category['icon'] }} text-sm"></i>
                         </div>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-500">Pie chart shows each category weight.</p>
-            </div>
-
-            <div class="space-y-3">
-                @forelse($categories as $category)
-                    @php
-                        $percentage = $total > 0 ? ($category['total'] / $total) * 100 : 0;
-                        $ledgerQuery = array_merge(array_diff_key(request()->query(), ['type' => true, 'category' => true]), [
-                            'type' => $type,
-                            'category' => $category['key'],
-                        ]);
-                    @endphp
-                    <a href="{{ route('reports.ledger', $ledgerQuery) }}" class="block rounded-2xl border border-gray-100 bg-white p-4 {{ $hoverClass }} transition">
-                        <div class="flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-11 h-11 rounded-full flex items-center justify-center text-white shrink-0" style="background-color: {{ $category['color'] }}">
-                                    <i class="{{ $category['icon'] }} text-sm"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <h3 class="font-bold text-gray-900 truncate">{{ $category['name'] }}</h3>
-                                    <p class="text-xs text-gray-500">{{ $category['count'] }} items · {{ number_format($percentage, 1) }}% weight</p>
-                                </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex justify-between items-baseline gap-2">
+                                <h4 class="font-semibold text-gray-800 truncate text-sm group-hover:text-primary transition">{{ $category['name'] }}</h4>
+                                <span class="text-sm font-bold {{ $typeColor }} shrink-0">{{ $formatAmount($category['total']) }}</span>
                             </div>
-                            <div class="text-right shrink-0">
-                                <p class="font-bold {{ $typeColor }}">{{ $formatAmount($category['total']) }}</p>
-                                <p class="text-xs text-primary">Open</p>
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <div class="flex-1 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-500" style="width: {{ $percentage }}%; background-color: {{ $category['color'] }};"></div>
+                                </div>
+                                <span class="text-[11px] text-gray-400 font-bold shrink-0">{{ number_format($percentage, 0) }}%</span>
                             </div>
                         </div>
-                        <div class="mt-3 w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                            <div class="h-2 rounded-full transition-all duration-500" style="width: {{ $percentage }}%; background-color: {{ $category['color'] }};"></div>
-                        </div>
-                    </a>
-                @empty
-                    <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
-                        <div class="w-14 h-14 {{ $typeBg }} rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="{{ $typeIcon }} text-xl"></i>
-                        </div>
-                        <h3 class="font-bold text-gray-900">No {{ strtolower($typeLabel) }} categories</h3>
-                        <p class="text-sm text-gray-500 mt-1">No {{ strtolower($typeLabel) }} transactions match this period.</p>
                     </div>
-                @endforelse
-            </div>
+                    <div class="ml-4 shrink-0 text-gray-300 group-hover:text-gray-500 transition-colors">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </div>
+                </a>
+            @empty
+                <div class="p-12 text-center text-gray-500">
+                    <i class="fas fa-tags text-3xl mb-3 opacity-20 block"></i>
+                    <p class="text-sm">No transaction pools matched this execution parameter context.</p>
+                </div>
+            @endforelse
         </div>
-    </section>
+    </div>
 </div>
 @endsection

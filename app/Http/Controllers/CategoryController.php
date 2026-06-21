@@ -2,12 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Http\Requests\StoreCategoryRequest;
-use App\Http\Requests\UpdateCategoryRequest;
+// ADD THIS LINE if it is missing or incorrect:
+use Illuminate\Http\Request; 
 
-class CategoryController
+use App\Models\Category;
+use Illuminate\Support\Facades\Auth;
+
+class CategoryController 
 {
+    public function picker(Request $request) // Now this will resolve correctly
+    {
+        $userId = Auth::id() ?? 1;
+        
+        $categories = Category::where('user_id', $userId)
+            ->orWhereNull('user_id')
+            ->get()
+            ->groupBy('type');
+
+        return view('categories.picker', compact('categories'));
+    }
+
+    
     /**
      * Display a listing of the resource.
      */

@@ -1,75 +1,87 @@
+<!-- Transactions edit view -->
 @extends('layouts.app')
 
 @section('content')
-<div class="mb-6 flex justify-between items-center">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">Edit Transaction</h1>
-        <p class="text-gray-500 text-sm mt-1">Update record details.</p>
+<!-- Flatpickr CSS/JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<div class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+    <div class="px-6 py-5 border-b border-gray-100">
+        <h2 class="text-xl font-black text-gray-900 tracking-tight">Edit Transaction</h2>
     </div>
 
-    <form action="{{ route('transactions.destroy', $transaction) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this transaction?');">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium shadow-sm transition flex items-center">
-            <i class="fas fa-trash-alt mr-2"></i>Delete
-        </button>
-    </form>
-</div>
-
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 max-w-2xl">
-    <form action="{{ route('transactions.update', $transaction) }}" method="POST" class="p-6 md:p-8 space-y-6">
+    <form action="{{ route('transactions.update', $transaction->id) }}" method="POST" class="p-6 space-y-5">
         @csrf
         @method('PUT')
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <!-- Amount -->
-             <div class="md:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Amount</label>
-                <div class="relative">
-                    <input type="number" step="0.01" min="0.01" name="amount" value="{{ old('amount', $transaction->amount) }}" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 border p-2.5 outline-none placeholder-gray-400" placeholder="0.00">
-                </div>
-                 <p class="text-xs text-gray-500 mt-1">Currency is tied to the selected account.</p>
-            </div>
 
-            <!-- Account -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Account</label>
-                <select name="account_id" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 border p-2.5 outline-none">
-                    <option value="" disabled>Select an account</option>
-                    @foreach($accounts as $account)
-                        <option value="{{ $account->id }}" {{ old('account_id', $transaction->account_id) == $account->id ? 'selected' : '' }}>{{ $account->name }} ({{ $account->currency }})</option>
-                    @endforeach
-                </select>
-            </div>
+        <!-- Amount -->
+        <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Amount</label>
+            <input type="number" step="0.01" name="amount" value="{{ $transaction->amount }}" required
+                class="w-full text-lg font-bold border border-gray-200 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary/20">
+        </div>
 
-            <!-- Category -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-                <select name="category_id" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 border p-2.5 outline-none">
-                    <option value="" disabled>Select a category</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ old('category_id', $transaction->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }} ({{ ucfirst($category->type) }})</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Date & Time -->
-            <div class="md:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Date & Time</label>
-                <!-- Formatting existing date for HTML input type datetime-local (e.g. 2026-05-24T12:00) -->
-                <input type="datetime-local" name="transaction_date" required value="{{ old('transaction_date', $transaction->transaction_date->format('Y-m-d\TH:i')) }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 border p-2.5 outline-none">
-            </div>
+        <!-- Styled Account Selection -->
+        <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Account</label>
             
-            <!-- Note -->
-            <div class="md:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Note (Optional)</label>
-                <input type="text" name="note" value="{{ old('note', $transaction->note) }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 border p-2.5 outline-none" placeholder="What was this for?">
+            <!-- Using Alpine.js to manage a custom dropdown state -->
+            <div x-data="{ open: false, selectedAccount: '{{ $transaction->account->name }}' }" class="relative">
+                <button type="button" @click="open = !open" 
+                    class="w-full flex justify-between items-center text-sm border border-gray-200 rounded-xl py-3 px-4 bg-white shadow-3xs text-gray-700">
+                    <span x-text="selectedAccount"></span>
+                    <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div x-show="open" @click.away="open = false" 
+                    class="absolute z-10 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-lg py-1">
+                    @foreach($accounts as $account)
+                        <div @click="selectedAccount = '{{ $account->name }}'; document.getElementById('account_id').value = {{ $account->id }}; open = false"
+                            class="px-4 py-3 text-sm hover:bg-gray-50 cursor-pointer">
+                            {{ $account->name }} ({{ $account->currency }})
+                        </div>
+                    @endforeach
+                </div>
+                
+                <!-- Hidden input to submit the actual value -->
+                <input type="hidden" name="account_id" id="account_id" value="{{ $transaction->account_id }}">
             </div>
         </div>
 
-        <div class="pt-4 border-t border-gray-100 flex justify-end gap-3 mt-8">
-            <a href="{{ route('transactions.index') }}" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition">Cancel</a>
-            <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-lg shadow-sm hover:bg-emerald-600 transition">Save Changes</button>
+        <!-- Category Picker Link -->
+        <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Category</label>
+            <!-- Navigates to picker, passing current transaction ID to return later -->
+            <a href="{{ route('categories.picker', ['from' => 'edit', 'id' => $transaction->id]) }}" 
+               class="w-full flex justify-between items-center text-sm border border-gray-200 rounded-xl py-3 px-4 bg-white shadow-3xs text-gray-700">
+               <span>{{ request('category_name') ?? $transaction->category->name }}</span>
+               <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+            </a>
+            <input type="hidden" name="category_id" value="{{ request('category_id') ?? $transaction->category_id }}" required>
+        </div>
+
+        <!-- Date & Time -->
+        <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Date & Time</label>
+            <input type="text" name="transaction_date" value="{{ $transaction->transaction_date->format('m/d/Y h:i A') }}" required
+                x-data x-init="flatpickr($el, { enableTime: true, dateFormat: 'm/d/Y h:i K', disableMobile: true })"
+                class="w-full text-sm border border-gray-200 rounded-xl py-3 px-4 bg-white cursor-pointer">
+        </div>
+
+        <!-- Note -->
+        <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Note (Optional)</label>
+            <input type="text" name="note" value="{{ $transaction->note }}"
+                class="w-full text-sm border border-gray-200 rounded-xl py-3 px-4 outline-none">
+        </div>
+
+        <!-- Actions -->
+        <div class="pt-4 space-y-3">
+            <button type="submit" class="w-full bg-primary text-white font-bold py-3.5 rounded-xl shadow-md">Update Transaction</button>
+            <a href="{{ route('transactions.index') }}" class="w-full block text-center bg-white border border-gray-200 text-gray-600 font-bold py-3.5 rounded-xl">Cancel</a>
         </div>
     </form>
 </div>
