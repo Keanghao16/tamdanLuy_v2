@@ -14,7 +14,10 @@ Route::get('/', function() {
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login')->middleware('guest');
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+// POST logout (used by forms)
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+// GET logout redirect (handles direct access/bookmarks)
+Route::get('/logout', fn() => redirect()->route('login'));
 
 // Google OAuth Routes
 Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('auth.google')->middleware('guest');

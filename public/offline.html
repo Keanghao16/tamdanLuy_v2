@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Tamdan Luy</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { text-align: center; padding: 24px; }
+        .icon { font-size: 64px; color: #10b981; margin-bottom: 16px; }
+        h1 { font-size: 24px; font-weight: 700; color: #1f2937; margin: 0 0 8px 0; }
+        p { font-size: 16px; color: #4b5563; margin: 0 0 24px 0; }
+        button { 
+            background: #10b981; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 16px;
+        }
+        button:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 180 180"><g><path fill="#10b981" d="M0 0h180v180H0z"/><path fill="#fff" d="M90 60c-3 0-5 2-5 5v30h-5V65c0-3-2-5-5-5s-5 2-5 5v30h-5V65c0-3-2-5-5-5s-5 2-5 5v30h-5V75c0-3-2-5-5-5s-5 2-5 5v30H40V75c0-8 7-15 15-15h30c8 0 15 7 15 15v30h-5V65c0-3-2-5-5-5s-5 2-5 5v30h-5V65c0-3-2-5-5-5s-5 2-5 5v30h-5V65c0-3-2-5-5-5s-5 2-5 5v30h15V120h35v35h10V120h35v-5c0-3-2-5-5-5s-5 2-5 5v30h-5V65"/></g></svg></div>
+        <h1>You're Offline</h1>
+        <p>Check your internet connection and try again.</p>
+        <button onclick="location.reload()" style="margin-bottom: 12px;">Retry</button>
+    </div>
+</body>
+</html>
