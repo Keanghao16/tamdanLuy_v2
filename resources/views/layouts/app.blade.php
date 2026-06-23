@@ -4,6 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tamdan Luy - Personal Finance Tracker</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json?v=4">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4">
+    <meta name="theme-color" content="#10b981">
+    <link rel="apple-touch-icon" href="/icons/icon-180x180-v4.svg?v=4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Standard PWA Manifest Link -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#10b981">
+
+    <!-- iOS PWA Specific Tags (Fixes image_092ac3.jpg icon issue) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Tamdan Luy">
+    
+    <!-- Link to the PNG images from your public/images folder -->
+    <link rel="apple-touch-icon" href="/images/image-180x180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/image-180x180.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/image-180x180.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/images/image-192x192.png">
+    
+    <!-- PWA Install Prompt -->
+    <meta name="application-name" content="Tamdan Luy">
+    <meta name="msapplication-TileColor" content="#10b981">
+    <meta name="msapplication-TileImage" content="/icons/icon-192x192-v4.svg?v=4">
+    <meta name="msapplication-starturl" content="/">
+    <meta name="msapplication-navbutton-color" content="#10b981">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -273,5 +304,30 @@
 
         @yield('content')
     </main>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => {
+                        console.log('PWA: Service Worker registered', reg.scope);
+                        // Check if update is available
+                        if (reg.installing) console.log('PWA: Installing');
+                        if (reg.waiting) console.log('PWA: Waiting');
+                        if (reg.active) console.log('PWA: Active');
+                    })
+                    .catch(err => console.log('PWA: Service Worker registration failed', err));
+            });
+        }
+        
+        // PWA Install Prompt Handler
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            window.pwaInstallPrompt = deferredPrompt;
+        });
+    </script>
 </body>
 </html>
